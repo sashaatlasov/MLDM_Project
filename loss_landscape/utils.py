@@ -2,7 +2,7 @@ import torch
 from typing import Dict
 
 
-def filter_norm_direction(optima: Dict, inplace=False) -> Dict:
+def filter_norm_direction(optima: Dict) -> Dict:
     """
     Creates random direction in parameters space with filter normalization.
 

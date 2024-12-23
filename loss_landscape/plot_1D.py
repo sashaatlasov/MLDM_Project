@@ -32,7 +32,7 @@ def sum_state_dicts(optima1, optima2, alpha):
     return sum
 
 
-def calculate_metrics(model, criterion, x, y, optima1: Dict[str, torch.tensor], optima2: Dict[str, torch.tensor] = None,
+def calculate_metrics1d(model, criterion, x, y, optima1: Dict[str, torch.tensor], optima2: Dict[str, torch.tensor] = None,
                       coef: Tuple[float, float] = (-0.5, 1.5), num_steps: int = 50) -> Tuple[np.array, np.array]:
     """
     Parameters
@@ -48,15 +48,19 @@ def calculate_metrics(model, criterion, x, y, optima1: Dict[str, torch.tensor], 
         optima2 = sum_state_dicts(optima1, direction, 0.5)
 
     losses = []
+    accuracy = []
     for alpha in tqdm(grid):
         weights = sum_state_dicts(optima1, optima2, alpha)
         model.load_state_dict(weights)
-        loss = criterion(model(x), y)
+        output = model(x)
+        loss = criterion(output, y)
+        acc = torch.sum(y == output.max(1)[1]) / x.shape[0]
         losses.append(loss.item())
-    return json.dumps({'grid': list(grid), 'loss': list(losses)})
+        accuracy.append(acc.item())
+    return json.dumps({'grid': list(grid), 'loss': list(losses), 'accuracy': list(accuracy)})
 
 
-def plot_1D(metrics: json, save: bool = False) -> figure:
+def plot_1D(metrics: json, save: bool = False, name='img') -> figure:
     """
     Plots 1-dimensional linear interpolation of loss function between two solutions.
 
@@ -64,6 +68,8 @@ def plot_1D(metrics: json, save: bool = False) -> figure:
     ----------
     metrics : json
         json calculates metrics neccessary for plot
+    save : bool
+        saves plotted figure
 
     Returns
     -------
@@ -74,12 +80,14 @@ def plot_1D(metrics: json, save: bool = False) -> figure:
     metrics = json.loads(metrics)
     grid = np.array(metrics['grid'])
     loss = np.array(metrics['loss'])
+    accuracy = np.array(metrics['accuracy'])
 
-    plt.figure(dpi=300)
-    plt.rcParams['text.usetex'] = True
-    plt.plot(grid, loss)
-    plt.title('')
-    plt.xlabel('Interpolation coefficient')
-    plt.ylabel('Loss')
-    plt.grid()
+    fig, ax1 = plt.subplots(dpi=200)
+    ax1.plot(grid, loss, 'b-')
+
+    ax1.set_xlabel('Interpolation coefficient')
+    ax1.set_ylabel('Loss', color='b')
+    plt.tight_layout()
+    if save:
+        plt.savefig(name, dpi=200)
     plt.show()

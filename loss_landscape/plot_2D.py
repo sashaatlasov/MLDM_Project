@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 from loss_landscape.utils import filter_norm_direction
 
 
+
 def sum_state_dicts(optima: dict, dir1: dict, dir2: dict, alpha: float, beta: float) -> dict:
     """
     Shifts model's optima in two defined direction with corresponding coefficients.
@@ -38,7 +39,7 @@ def sum_state_dicts(optima: dict, dir1: dict, dir2: dict, alpha: float, beta: fl
     return sum
 
 
-def calculate_metrics(model, criterion, optima, x, y, coef=(-1., 1.), num_steps: int = 50):
+def calculate_metrics2d(model, criterion, x, y, optima, coef=(-1., 1.), num_steps: int = 50):
 
     grid = np.linspace(coef[0], coef[1], num_steps)
     direction1 = filter_norm_direction(optima)
@@ -55,7 +56,7 @@ def calculate_metrics(model, criterion, optima, x, y, coef=(-1., 1.), num_steps:
     return json.dumps({'grid': list(grid), 'loss': list(losses)})
 
 
-def plot_2D(metrics: json, vlevel: float = 0.5) -> figure:
+def plot_2D(metrics: json, vlevel: float = 0.5, save: bool = False, name='img') -> figure:
     """
     Plots 2-dimensional linear interpolation of loss function between two solutions.
 
@@ -70,19 +71,21 @@ def plot_2D(metrics: json, vlevel: float = 0.5) -> figure:
     grid = np.array(metrics['grid'])
     x, y = np.meshgrid(grid, grid)
     z = np.array(metrics['loss']).reshape(x.shape[0], x.shape[0])
-
-    plt.figure(dpi=300)
-    plt.rcParams['text.usetex'] = True
-    CS = plt.contour(x, y, z, cmap='summer',
-                     levels=np.arange(np.min(z), np.max(z), vlevel))
+    
+    fig, ax = plt.subplots(dpi=300)
+    CS = ax.contour(x, y, z, cmap='summer',
+                    levels=np.arange(np.min(z), np.max(z), vlevel))
     plt.clabel(CS, inline=1, fontsize=8)
     plt.title('Contour plot around an optima')
-    plt.xlabel(r'$\alpha$')
-    plt.ylabel(r'$\beta$')
+    plt.xlabel('alpha')
+    plt.ylabel('beta')
+    plt.tight_layout()
+    if save:
+        plt.savefig(name, dpi=200)
     plt.show()
 
 
-def plot_3D(metrics: json) -> figure:
+def plot_3D(metrics: json, save: bool = False, name='img') -> figure:
     """
 
     Parameters
@@ -97,12 +100,13 @@ def plot_3D(metrics: json) -> figure:
     z = np.array(metrics['loss']).reshape(x.shape[0], x.shape[0])
 
     fig = plt.figure(dpi=300)
-    plt.rcParams['text.usetex'] = True
     ax = fig.add_subplot(projection='3d')
 
     ax.plot_surface(x, y, z, edgecolor='k', linewidth=0.3, cmap=cm.coolwarm)
 
     ax.set_title("3D Loss landscape")
-    ax.set_xlabel(r'$\alpha$')
-    ax.set_ylabel(r'$\beta$')
+    ax.set_xlabel('alpha')
+    ax.set_ylabel('beta')
+    if save:
+        plt.savefig(name, dpi=200)
     plt.show()

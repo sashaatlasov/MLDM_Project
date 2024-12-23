@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "vll"
+version = "0.1.0"
+authors = ["Alexandr Atlasov <aaatlasov@edu.hse.ru>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://gitlab.com/hse4312544/MLOps#"
+packages = [{ include = "mops"}]
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+joblib = "1.4.2"
+matplotlib = "3.9.2"
+numpy = "1.26.4"
+pandas = "2.2.3"
+PyYAML= "6.0.2"
+Requests = "2.32.3"
+scikit_learn = "1.5.2"
+setuptools = "65.5.0"
+pytest = "8.3.4"
